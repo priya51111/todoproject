@@ -1,17 +1,17 @@
 class Menu {
-  final String id;
+  final String menuId;
 
-  Menu({required this.id});
+  Menu({required this.menuId});
 
   factory Menu.fromJson(Map<String, dynamic> json) {
     return Menu(
-      id: json['id'] as String,
+      menuId: json['menuId'] as String,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
+      'menuId': menuId,
     };
   }
 }
@@ -20,8 +20,9 @@ class Task {
   final String task;
   final String date;
   final String time;
-  final List<Menu> menuId; // List of Menu objects
+  final List<Menu> menuId;
   final String userId;
+  bool isChecked; 
 
   Task({
     required this.task,
@@ -29,6 +30,7 @@ class Task {
     required this.time,
     required this.menuId,
     required this.userId,
+    this.isChecked = false,
   });
 
   factory Task.fromJson(Map<String, dynamic> json) {
@@ -41,6 +43,7 @@ class Task {
       time: json['time'] as String,
       menuId: menuList,
       userId: json['userId'] as String,
+        isChecked: json['isChecked'] ?? false,
     );
   }
 
@@ -51,7 +54,19 @@ class Task {
       'time': time,
       'userId': userId,
       'menuId': menuId.map((menu) => menu.toJson()).toList(),
+       'isChecked': isChecked,
     };
   }
+  Task copyWith({bool? isChecked}) {
+    return Task(
+      task: task,
+      date: date,
+      time: time,
+      menuId: menuId,
+      userId: userId,
+      isChecked: isChecked ?? this.isChecked,
+    );
+  }
 }
+
 

@@ -27,4 +27,21 @@ class TaskRepository {
       throw Exception('Error creating task:$error'); 
     }
   }
+
+   Future<List<Task>> fetchTasksByUserId(String userId) async {
+    try {
+      final response = await http.get(Uri.parse('$apiUrl/gettasks/$userId'));
+      if (response.statusCode == 200) {
+        List<dynamic> tasksJson = jsonDecode(response.body);
+        return tasksJson.map((json) => Task.fromJson(json)).toList();
+      } else {
+        log.e('Failed to fetch tasks: ${response.statusCode}');
+        throw Exception('Failed to fetch tasks');
+      }
+    } catch (error) {
+      log.e('Error fetching tasks: $error');
+      throw Exception('Error fetching tasks: $error');
+    }
+  }
 }
+ 

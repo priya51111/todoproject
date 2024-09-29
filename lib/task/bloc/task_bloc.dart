@@ -1,9 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-
+import 'package:todoproject/task/bloc/task_event.dart';
 import 'package:todoproject/task/repository/task_repository.dart';
-
 import '../model.dart';
-import 'task_event.dart';
 import 'task_state.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:logger/logger.dart';
@@ -19,39 +17,79 @@ class TaskBloc extends Bloc<TaskEvent, TaskState> {
     required this.localNotificationsPlugin,
   }) : super(TaskInitial()) {
     on<TaskSubmitted>(_ontaskSubmitted);
-
+    on<FetchTasksByUserId>(_onFetchTasksByUserId);
+    on<UpdateTaskStatus>(_onupdateTaskStatus);
   }
-  Future<void>_ontaskSubmitted(
+
+  Future<void> _ontaskSubmitted(
     TaskSubmitted event,
     Emitter<TaskState> emit,
-  ) async{
-      emit(TaskLoading());
-      logger.i(
-          'Creating task: ${event.task}, Time: ${event.time}, Date: ${event.date},UserId: ${event.userId}, MenuId: ${event.menuId}');
+  ) async {
+    emit(TaskLoading());
+    logger.i(
+        'Creating task: ${event.task}, Time: ${event.time}, Date: ${event.date},UserId: ${event.userId}, MenuId: ${event.menuId}');
     try {
-        await taskRepository.createTask(Task(
-          task: event.task,
-          time: event.time,
-          date: event.date,
-         userId: event.userId,
-         menuId: [],
-        ));
+      final newTask = Task(
+        task: event.task,
+        time: event.time,
+        date: event.date,
+        userId: event.userId,
+        menuId: [],
+      );
 
-        await _scheduleNotification(event.task, event.date, event.time);
+      await taskRepository.createTask(newTask);
 
-        emit(TaskSucess());
-        logger.i('Task created successfully and notification scheduled');
-      } catch (error) {
-        logger.e('Error creating task: $error');
-        emit(TaskFailure(message: error.toString()));
-      }
+      await _scheduleNotification(event.task, event.date, event.time);
+
+      // Option 1: Emit the new task added to a list
+      emit(TaskSuccess(tasks: [newTask]));
+
+      // Option 2: Fetch the updated list of tasks
+      // final updatedTasks = await taskRepository.fetchTasksByUserId(event.userId);
+      // emit(TaskSuccess(tasks: updatedTasks));
+
+      logger.i('Task created successfully and notification scheduled');
+    } catch (error) {
+      logger.e('Error creating task: $error');
+      emit(TaskFailure(message: error.toString()));
+    }
   }
+
+  Future<void> _onFetchTasksByUserId(
+    FetchTasksByUserId event,
+    Emitter<TaskState> emit,
+  ) async {
+    emit(TaskLoading());
+    logger.i('Fetching tasks for userId: ${event.userId}');
+    try {
+      final tasks = await taskRepository.fetchTasksByUserId(event.userId);
+      emit(TaskSuccess(tasks: tasks));
+      logger.i('Tasks fetched successfully for userId: ${event.userId}');
+    } catch (error) {
+      logger.e('Error fetching tasks: $error');
+      emit(TaskFailure(message: error.toString()));
+    }
+  }
+Future<void>_onupdateTaskStatus(
+  UpdateTaskStatus event,
+  Emitter<TaskState>emit,
+) async {
+  // Create a new list of tasks with the updated task
+  if (state is TaskSuccess) {
+    final updatedTasks = (state as TaskSuccess).tasks.map((task) {
+      return task.userId == event.task.userId && task.task == event.task.task
+          ? event.task
+          : task;
+    }).toList();
+
+    emit(TaskSuccess(tasks: updatedTasks));
+  }
+}
 
 
   Future<void> _scheduleNotification(
       String task, String date, String time) async {
     var scheduledTime = DateTime.parse('$date $time');
-
     var tzScheduledTime = tz.TZDateTime.from(scheduledTime, tz.local);
 
     var androidPlatformChannelSpecifics = AndroidNotificationDetails(

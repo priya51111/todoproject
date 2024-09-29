@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:todoproject/screens.dart/homepage.dart';
+import 'package:todoproject/task/model.dart';
 
 
 abstract class TaskEvent extends Equatable {
@@ -13,7 +14,7 @@ class TaskSubmitted extends TaskEvent {
   final String task;
   final String date;
   final String time;
-  final List<Menu> menuId;
+  final List<String> menuId;
   final String userId;
 
   const TaskSubmitted({
@@ -38,3 +39,11 @@ class FetchTasksByUserId extends TaskEvent {
   List<Object> get props => [userId];
 }
 
+class UpdateTaskStatus extends TaskEvent {
+  final Task task;
+
+  const UpdateTaskStatus({required this.task});
+
+  @override
+  List<Object?> get props => [task];
+}

@@ -1,14 +1,13 @@
-// createtask.dart
-import 'package:flutter/material.dart';
+ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:todoproject/task/bloc/task_event.dart';
 
+import '../../menu/bloc/menu_bloc.dart';
+import '../../menu/bloc/menu_event.dart';
+import '../../menu/bloc/menu_state.dart';
 import '../bloc/task_bloc.dart';
-import '../bloc/task_event.dart';
 import '../bloc/task_state.dart';
-
-
-
 class CreateTaskPage extends StatefulWidget {
   const CreateTaskPage({super.key});
 
@@ -21,17 +20,15 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
   final TextEditingController _dateController = TextEditingController();
   final TextEditingController _timeController = TextEditingController();
 
-  final List<String> repeatOptions = [
-    'No repeat',
-    'Once a day',
-    'Once a week',
-    'Once a month',
-    'Once a year'
-  ];
-  final List<String> taskTypes = ['Default', 'Personal', 'Shopping', 'Work'];
-
-  String selectedRepeat = 'No repeat';
   String selectedTaskType = 'Default';
+  bool _isDateSelected = false;
+
+  @override
+  void initState() {
+    super.initState();
+    BlocProvider.of<MenuBloc>(context)
+        .add(FetchMenuListEvent(userId: 'your_user_id', date: 'your_date'));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +40,7 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
       ),
       body: BlocListener<TaskBloc, TaskState>(
         listener: (context, state) {
-          if (state is TaskSucess) {
+          if (state is TaskSuccess) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('Task Created Successfully')),
             );
@@ -59,7 +56,7 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
           child: Form(
             child: ListView(
               children: [
-                // Task Input
+                SizedBox(height: 16),
                 Text(
                   "What is to be done?",
                   style: TextStyle(
@@ -120,6 +117,9 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
                     if (pickedDate != null) {
                       _dateController.text =
                           DateFormat('dd/MM/yyyy').format(pickedDate);
+                      setState(() {
+                        _isDateSelected = true;
+                      });
                     }
                   },
                   decoration: InputDecoration(
@@ -133,9 +133,8 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
                     ),
                   ),
                 ),
-                SizedBox(height: 16),
 
-                // Time Input
+                // Time Input (enabled only if date is selected)
                 Text(
                   "Time",
                   style: TextStyle(
@@ -149,27 +148,30 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
                   controller: _timeController,
                   style: TextStyle(color: Colors.white),
                   readOnly: true,
-                  onTap: () async {
-                    TimeOfDay? pickedTime = await showTimePicker(
-                      context: context,
-                      initialTime: TimeOfDay.now(),
-                      builder: (context, child) {
-                        return Theme(
-                          data: ThemeData.light().copyWith(
-                            colorScheme: ColorScheme.light(
-                              primary: Colors.blue.shade900,
-                              onPrimary: Colors.white,
-                              onSurface: Colors.blue.shade900,
-                            ),
-                          ),
-                          child: child!,
-                        );
-                      },
-                    );
-                    if (pickedTime != null) {
-                      _timeController.text = pickedTime.format(context);
-                    }
-                  },
+                  enabled: _isDateSelected, // Enable only if date is selected
+                  onTap: _isDateSelected
+                      ? () async {
+                          TimeOfDay? pickedTime = await showTimePicker(
+                            context: context,
+                            initialTime: TimeOfDay.now(),
+                            builder: (context, child) {
+                              return Theme(
+                                data: ThemeData.light().copyWith(
+                                  colorScheme: ColorScheme.light(
+                                    primary: Colors.blue.shade900,
+                                    onPrimary: Colors.white,
+                                    onSurface: Colors.blue.shade900,
+                                  ),
+                                ),
+                                child: child!,
+                              );
+                            },
+                          );
+                          if (pickedTime != null) {
+                            _timeController.text = pickedTime.format(context);
+                          }
+                        }
+                      : null,
                   decoration: InputDecoration(
                     hintText: "Time not set",
                     hintStyle: TextStyle(color: Colors.white),
@@ -183,39 +185,6 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
                 ),
                 SizedBox(height: 16),
 
-              
-                Text(
-                  "Repeat",
-                  style: TextStyle(
-                    color: Color.fromARGB(135, 33, 149, 243),
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                  ),
-                ),
-                DropdownButton<String>(
-                  value: selectedRepeat,
-                  dropdownColor: Color.fromARGB(135, 33, 149, 243),
-                  icon: Icon(Icons.arrow_drop_down, color: Colors.white),
-                  underline: Container(
-                    height: 1,
-                    color: Colors.white,
-                  ),
-                  style: TextStyle(color: Colors.white),
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      selectedRepeat = newValue!;
-                    });
-                  },
-                  items: repeatOptions.map((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text(value),
-                    );
-                  }).toList(),
-                ),
-                SizedBox(height: 16),
-
-                // Task Type Dropdown
                 Text(
                   "Add to List",
                   style: TextStyle(
@@ -224,30 +193,44 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
                     fontSize: 15,
                   ),
                 ),
-                DropdownButton<String>(
-                  value: selectedTaskType,
-                  dropdownColor: Color.fromARGB(135, 33, 149, 243),
-                  icon: Icon(Icons.arrow_drop_down, color: Colors.white),
-                  underline: Container(
-                    height: 1,
-                    color: Colors.white,
-                  ),
-                  style: TextStyle(color: Colors.white),
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      selectedTaskType = newValue!;
-                    });
+                BlocBuilder<MenuBloc, MenuState>(
+                  builder: (context, state) {
+                    if (state is MenuLoading) {
+                      return CircularProgressIndicator();
+                    } else if (state is MenuLoaded) {
+                      final menuList = state.menuList;
+                      return DropdownButton<String>(
+                        value: selectedTaskType,
+                        dropdownColor: Color.fromARGB(135, 33, 149, 243),
+                        icon: Icon(Icons.arrow_drop_down, color: Colors.white),
+                        underline: Container(
+                          height: 1,
+                          color: Colors.white,
+                        ),
+                        style: TextStyle(color: Colors.white),
+                        onChanged: (String? newValue) {
+                          setState(() {
+                            selectedTaskType = newValue!;
+                          });
+                        },
+                        items: menuList.map((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          );
+                        }).toList(),
+                      );
+                    } else if (state is MenuError) {
+                      return Text(
+                        'Failed to load menu: ${state.message}',
+                        style: TextStyle(color: Colors.red),
+                      );
+                    } else {
+                      return SizedBox.shrink();
+                    }
                   },
-                  items: taskTypes.map((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text(value),
-                    );
-                  }).toList(),
                 ),
                 SizedBox(height: 24),
-
-              
                 Center(
                   child: FloatingActionButton(
                     onPressed: () {
@@ -260,13 +243,12 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
                           SnackBar(content: Text('Please fill in all fields')),
                         );
                       } else {
-                        
-                        context.read<TaskBloc>().add(   TaskSubmitted(
+                        context.read<TaskBloc>().add(TaskSubmitted(
                               task: task,
                               date: date,
                               time: time,
-                             
-                              menuId: [], userId: '',
+                              menuId: [], // Replace with appropriate menu ID logic
+                              userId: '',
                             ));
                       }
                     },

@@ -10,8 +10,9 @@ const List<String> list = <String>[
   "New List",
   "Finished"
 ];
+bool isChecked = false;
 
-enum Menu {
+enum menu {
   TaskLists,
   AddINBatchMode,
   RemoveAds,
@@ -92,7 +93,7 @@ class _homepageState extends State<homepage> {
                     Icons.search,
                     color: Colors.white,
                   )),
-              PopupMenuButton<Menu>(
+              PopupMenuButton<menu>(
                 elevation: 0,
                 color: Color.fromARGB(135, 33, 149, 243),
                 constraints: BoxConstraints.tightFor(height: 410, width: 200),
@@ -100,66 +101,66 @@ class _homepageState extends State<homepage> {
                   Icons.more_vert,
                   color: Colors.white,
                 ),
-                onSelected: (Menu item) {},
-                itemBuilder: (BuildContext context) => <PopupMenuEntry<Menu>>[
-                  const PopupMenuItem<Menu>(
-                    value: Menu.TaskLists,
+                onSelected: (menu item) {},
+                itemBuilder: (BuildContext context) => <PopupMenuEntry<menu>>[
+                  const PopupMenuItem<menu>(
+                    value: menu.TaskLists,
                     child: Text('Task Lists',
                         style: TextStyle(
                             color: Colors.white,
                             fontSize: 17,
                             fontWeight: FontWeight.normal)),
                   ),
-                  const PopupMenuItem<Menu>(
-                    value: Menu.AddINBatchMode,
+                  const PopupMenuItem<menu>(
+                    value: menu.AddINBatchMode,
                     child: Text('Add in Batch Mode',
                         style: TextStyle(
                             color: Colors.white,
                             fontSize: 17,
                             fontWeight: FontWeight.normal)),
                   ),
-                  const PopupMenuItem<Menu>(
-                    value: Menu.RemoveAds,
+                  const PopupMenuItem<menu>(
+                    value: menu.RemoveAds,
                     child: Text('Remove Ads',
                         style: TextStyle(
                             color: Colors.white,
                             fontSize: 17,
                             fontWeight: FontWeight.normal)),
                   ),
-                  const PopupMenuItem<Menu>(
-                    value: Menu.Moreapps,
+                  const PopupMenuItem<menu>(
+                    value: menu.Moreapps,
                     child: Text('More Apps',
                         style: TextStyle(
                             color: Colors.white,
                             fontSize: 17,
                             fontWeight: FontWeight.normal)),
                   ),
-                  const PopupMenuItem<Menu>(
-                    value: Menu.SendFeedback,
+                  const PopupMenuItem<menu>(
+                    value: menu.SendFeedback,
                     child: Text('Send Feedback',
                         style: TextStyle(
                             color: Colors.white,
                             fontSize: 17,
                             fontWeight: FontWeight.normal)),
                   ),
-                  const PopupMenuItem<Menu>(
-                    value: Menu.followus,
+                  const PopupMenuItem<menu>(
+                    value: menu.followus,
                     child: Text('Follow us',
                         style: TextStyle(
                             color: Colors.white,
                             fontSize: 17,
                             fontWeight: FontWeight.normal)),
                   ),
-                  const PopupMenuItem<Menu>(
-                    value: Menu.followus,
+                  const PopupMenuItem<menu>(
+                    value: menu.followus,
                     child: Text('Follow us',
                         style: TextStyle(
                             color: Colors.white,
                             fontSize: 17,
                             fontWeight: FontWeight.normal)),
                   ),
-                  const PopupMenuItem<Menu>(
-                    value: Menu.setting,
+                  const PopupMenuItem<menu>(
+                    value: menu.setting,
                     child: Text('Settings',
                         style: TextStyle(
                             color: Colors.white,
@@ -175,25 +176,45 @@ class _homepageState extends State<homepage> {
       body: Container(
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.only(top: 120, left: 15),
-              child: Image.asset("assets/blue.png"),
+            SizedBox(
+              height: 20,
             ),
             Padding(
-              padding: const EdgeInsets.only(top: 280, left: 300),
-              child: FloatingActionButton(
-                backgroundColor: Colors.white,
-                onPressed: () {
-                  // Add your onPressed functionality here
-                },
-                child: Icon(
-                  Icons.add,
-                  color: Colors.blue,
-                  size: 34,
+              padding: const EdgeInsets.only(left: 10),
+              child: Container(
+                height: 70,
+                width: 370,
+                decoration: BoxDecoration(
+                  color: Color.fromARGB(135, 33, 149, 243),
+                  borderRadius: BorderRadius.circular(25),
                 ),
-                shape: CircleBorder(),
+                child: ListTile(
+                  leading: Checkbox(
+                    side: BorderSide(
+                      color: Colors.white,
+                    ),
+                    value: isChecked,
+                    onChanged: (bool? value) {
+                      setState(() {
+                        isChecked = value!;
+                      });
+                    },
+                  ),
+                  title: Text(
+                    'Taskname',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  subtitle: Row(
+                    children: [
+                      Text('day,', style: TextStyle(color: Colors.white)),
+                      Text('date,', style: TextStyle(color: Colors.white)),
+                      Text('year,', style: TextStyle(color: Colors.white)),
+                      Text('time', style: TextStyle(color: Colors.white)),
+                    ],
+                  ),
+                ),
               ),
-            ),
+            )
           ],
         ),
       ),
