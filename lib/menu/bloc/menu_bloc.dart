@@ -1,8 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:todoproject/menu/bloc/menu_event.dart';
-
 import '../repo/menu_repository.dart';
+import 'menu_event.dart';
 import 'menu_state.dart';
 
 class MenuBloc extends Bloc<MenuEvent, MenuState> {
@@ -17,19 +15,21 @@ class MenuBloc extends Bloc<MenuEvent, MenuState> {
     try {
       emit(MenuLoading());
       final menuList = await menuRepository.getMenuList(event.userId, event.date);
-      emit(MenuLoaded(menuList: menuList));
+      emit(MenuLoaded(menuList: menuList)); // Pass the fetched menu list here
     } catch (e) {
-      emit(MenuError(message: 'Failed to fetch menu list'));
+      print('Error fetching menu list: $e'); // Logging the error
+      emit(MenuError(message: 'Failed to fetch menu list: ${e.toString()}'));
     }
   }
 
   Future<void> _onAddMenu(AddMenuEvent event, Emitter<MenuState> emit) async {
     try {
-      await menuRepository.addMenu(event.menuname);
-     
-      add(FetchMenuListEvent(userId: event.userId, date: event.date));
+      emit(MenuLoading());
+      String menuId = await menuRepository.addMenu(event.menuname, event.userId, event.date);
+      emit(MenuAdded(menuId: menuId)); // Emit a state indicating the menu was added
     } catch (e) {
-      emit(MenuError(message: 'Failed to add new menu'));
+      print('Error adding menu: $e'); // Logging the error
+      emit(MenuError(message: 'Failed to add menu: ${e.toString()}'));
     }
   }
 }

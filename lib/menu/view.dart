@@ -8,6 +8,8 @@ import 'package:todoproject/task/bloc/task_event.dart';
 import 'package:todoproject/task/bloc/task_state.dart';
 import 'package:todoproject/task/view/view.dart';
 
+import 'model.dart';
+
 class TaskMenuPage extends StatefulWidget {
   final String userId;
 
@@ -44,10 +46,10 @@ class _TaskMenuPageState extends State<TaskMenuPage> {
                   return DropdownButton<String>(
                     value: dropdownValue,
                     items: [
-                      ...menuList.map((String value) {
+                      ...menuList.map((Menus menu) {
                         return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
+                          value: menu.menuId,
+                          child: Text(menu.menuName),
                         );
                       }).toList(),
                       DropdownMenuItem<String>(
@@ -74,63 +76,101 @@ class _TaskMenuPageState extends State<TaskMenuPage> {
           ],
         ),
       ),
-      body: BlocBuilder<TaskBloc, TaskState>(
-        builder: (context, state) {
-          if (state is TaskLoading) {
-            return Center(child: CircularProgressIndicator());
-          } else if (state is TaskSuccess) {
-            return ListView.builder(
-              itemCount: state.tasks.length,
-              itemBuilder: (context, index) {
-                final task = state.tasks[index];
-                return Padding(
-                  padding: const EdgeInsets.only(left: 10, top: 10),
-                  child: Container(
-                    height: 70,
-                    width: 370,
-                    decoration: BoxDecoration(
-                      color: Color.fromARGB(135, 33, 149, 243),
-                      borderRadius: BorderRadius.circular(25),
-                    ),
-                    child: ListTile(
-                      leading: Checkbox(
-                        side: BorderSide(
-                          color: Colors.white,
+      body:BlocBuilder<TaskBloc, TaskState>(
+  builder: (context, state) {
+    if (state is TaskLoading) {
+      return Center(child: CircularProgressIndicator());
+    } else if (state is TaskSuccess) {
+      if (state.tasks.isEmpty) {
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Image.asset(
+                'assets/noimage.png', 
+                height: 200,
+              ),
+              SizedBox(height: 20),
+              Text(
+                'No tasks available',
+                style: TextStyle(fontSize: 18),
+              ),
+            ],
+          ),
+        );
+      } else {
+        return ListView.builder(
+          itemCount: state.tasks.length,
+          itemBuilder: (context, index) {
+            final task = state.tasks[index];
+            final taskDueDate = DateTime.parse(task.date);
+            bool isExpired = DateTime.now().isAfter(taskDueDate);
+
+            return AnimatedContainer(
+              duration: Duration(milliseconds: 500),
+              curve: Curves.easeInOut,
+              padding: EdgeInsets.only(left: task.isChecked ? 100 : 10, top: 10),
+              child: task.isChecked
+                  ? SizedBox.shrink()
+                  : Container(
+                      height: 70,
+                      width: 370,
+                      decoration: BoxDecoration(
+                        color: isExpired
+                            ? Colors.red
+                            : Color.fromARGB(135, 33, 149, 243),
+                        borderRadius: BorderRadius.circular(25),
+                      ),
+                      child: ListTile(
+                        leading: Checkbox(
+                          side: BorderSide(
+                            color: Colors.white,
+                          ),
+                          value: task.isChecked,
+                          onChanged: (bool? value) {
+                            if (value != null && value) {
+                              context.read<TaskBloc>().add(UpdateTaskStatus(task: task.copyWith(isChecked: value)));
+                              _showTaskFinishedDialog(context);
+                            }
+                          },
                         ),
-                        value: task.isChecked,
-                        onChanged: (bool? value) {
-                          context.read<TaskBloc>().add(UpdateTaskStatus(task: task.copyWith(isChecked: value)));
-                        },
-                      ),
-                      title: Text(
-                        task.task,
-                        style: TextStyle(color: Colors.white),
-                      ),
-                      subtitle: Row(
-                        children: [
-                          Text('${task.date},', style: TextStyle(color: Colors.white)),
-                          Text('${task.time}', style: TextStyle(color: Colors.white)),
-                        ],
+                        title: Text(
+                          task.task,
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        subtitle: Row(
+                          children: [
+                            Text(
+                              isExpired ? 'No due' : '${task.date},',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                            if (!isExpired)
+                              Text(
+                                ' ${task.time}',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  
-                );
-              },
             );
-          } else if (state is TaskFailure) {
-            return Center(child: Text('Failed to load tasks: ${state.message}'));
-          } else {
-            return Center(child: Text('No tasks available'));
-          }
-        },
-      ),
-     floatingActionButton: FloatingActionButton(
+          },
+        );
+      }
+    } else if (state is TaskFailure) {
+      return Center(child: Text('Failed to load tasks: ${state.message}'));
+    } else {
+      return Center(child: Text('No tasks available'));
+    }
+  },
+),
+
+      floatingActionButton: FloatingActionButton(
         onPressed: () {
           // Navigate to NewTaskPage
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const CreateTaskPage   ()),
+            MaterialPageRoute(builder: (context) => const CreateTaskPage()),
           );
         },
         child: const Icon(Icons.add),
@@ -160,6 +200,24 @@ class _TaskMenuPageState extends State<TaskMenuPage> {
                 }
               },
               child: Text('Add'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showTaskFinishedDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Task Finished'),
+          content: Text('The task has been marked as completed.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('OK'),
             ),
           ],
         );

@@ -1,26 +1,12 @@
-class Menu {
-  final String menuId;
 
-  Menu({required this.menuId});
 
-  factory Menu.fromJson(Map<String, dynamic> json) {
-    return Menu(
-      menuId: json['menuId'] as String,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'menuId': menuId,
-    };
-  }
-}
+import '../menu/model.dart';
 
 class Task {
   final String task;
   final String date;
   final String time;
-  final List<Menu> menuId;
+  final List<Menus> menuId;
   final String userId;
   bool isChecked; 
 
@@ -35,7 +21,7 @@ class Task {
 
   factory Task.fromJson(Map<String, dynamic> json) {
     var menuFromJson = json['menuId'] as List;
-    List<Menu> menuList = menuFromJson.map((i) => Menu.fromJson(i)).toList();
+    List<Menus> menuList = menuFromJson.map((i) => Menus.fromJson(i)).toList();
 
     return Task(
       task: json['task'] as String,

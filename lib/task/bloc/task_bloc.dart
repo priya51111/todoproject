@@ -18,7 +18,7 @@ class TaskBloc extends Bloc<TaskEvent, TaskState> {
   }) : super(TaskInitial()) {
     on<TaskSubmitted>(_ontaskSubmitted);
     on<FetchTasksByUserId>(_onFetchTasksByUserId);
-    on<UpdateTaskStatus>(_onupdateTaskStatus);
+   
   }
 
   Future<void> _ontaskSubmitted(
@@ -41,12 +41,10 @@ class TaskBloc extends Bloc<TaskEvent, TaskState> {
 
       await _scheduleNotification(event.task, event.date, event.time);
 
-      // Option 1: Emit the new task added to a list
+      
       emit(TaskSuccess(tasks: [newTask]));
 
-      // Option 2: Fetch the updated list of tasks
-      // final updatedTasks = await taskRepository.fetchTasksByUserId(event.userId);
-      // emit(TaskSuccess(tasks: updatedTasks));
+      
 
       logger.i('Task created successfully and notification scheduled');
     } catch (error) {
@@ -70,21 +68,7 @@ class TaskBloc extends Bloc<TaskEvent, TaskState> {
       emit(TaskFailure(message: error.toString()));
     }
   }
-Future<void>_onupdateTaskStatus(
-  UpdateTaskStatus event,
-  Emitter<TaskState>emit,
-) async {
-  // Create a new list of tasks with the updated task
-  if (state is TaskSuccess) {
-    final updatedTasks = (state as TaskSuccess).tasks.map((task) {
-      return task.userId == event.task.userId && task.task == event.task.task
-          ? event.task
-          : task;
-    }).toList();
 
-    emit(TaskSuccess(tasks: updatedTasks));
-  }
-}
 
 
   Future<void> _scheduleNotification(

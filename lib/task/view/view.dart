@@ -6,6 +6,7 @@ import 'package:todoproject/task/bloc/task_event.dart';
 import '../../menu/bloc/menu_bloc.dart';
 import '../../menu/bloc/menu_event.dart';
 import '../../menu/bloc/menu_state.dart';
+import '../../menu/model.dart';
 import '../bloc/task_bloc.dart';
 import '../bloc/task_state.dart';
 class CreateTaskPage extends StatefulWidget {
@@ -213,10 +214,10 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
                             selectedTaskType = newValue!;
                           });
                         },
-                        items: menuList.map((String value) {
+                        items: menuList.map((Menus menu) {
                           return DropdownMenuItem<String>(
-                            value: value,
-                            child: Text(value),
+                            value: menu.menuId,
+                            child: Text(menu.menuName),
                           );
                         }).toList(),
                       );
